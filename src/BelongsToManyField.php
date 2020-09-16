@@ -32,6 +32,9 @@ class BelongsToManyField extends Field
 
     public $label = "name";
 
+    protected $creatable = true;
+    protected $relationCreateAttributes = [];
+
     /**
      * Create a new field.
      *
@@ -54,16 +57,16 @@ class BelongsToManyField extends Field
         $this->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($resource) {
             if (is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
                 $model::saved(function ($model) use ($attribute, $request) {
-                    $inp = json_decode($request->$attribute, true);
-                    if ($inp !== null)
-                        $values = array_column($inp, 'id');
-                    else
-                        $values = [];
+                    $values = json_decode($request->$attribute, true);
+
+                    $ids = $this->getRelatedIds($values);
+
                     if (!empty($this->pivot())) {
-                        $values = array_fill_keys($values, $this->pivot());
+                        $ids = array_fill_keys($ids, $this->pivot());
                     }
+
                     $model->$attribute()->sync(
-                        $values
+                        $ids
                     );
                 });
                 unset($request->$attribute);
@@ -124,6 +127,22 @@ class BelongsToManyField extends Field
         ]);
     }
 
+    public function creatable(string $placeholder = 'Add new', array $attributes = [])
+    {
+        $this->creatable = true;
+        $this->relationCreateAttributes = $attributes;
+
+        $multiselectOptions = array_merge($this->meta()['multiselectOptions'] ?? [], [
+            'taggable' => true,
+            'tag-placeholder' => $placeholder,
+        ]);
+
+        return $this->withMeta([
+            'creatable' => $this->creatable,
+            'multiselectOptions' => $multiselectOptions,
+        ]);
+    }
+
     public function rules($rules)
     {
         $rules = ($rules instanceof Rule || is_string($rules)) ? func_get_args() : $rules;
@@ -142,6 +161,35 @@ class BelongsToManyField extends Field
                 $this->value = $value;
             }
         }
+    }
+
+    protected function getRelatedIds(?array $values)
+    {
+        $ids = [];
+
+        if ($values === null) {
+            return $ids;
+        }
+
+        foreach ($values as $value) {
+            if ($this->creatable && $value['id'] === null) {
+                $ids[] = $this->createRelated($value)->getKey();
+            } else {
+                $ids[] = $value['id'];
+            }
+        }
+
+        return $ids;
+    }
+
+    protected function createRelated(array $value)
+    {
+        $relatedModel = $this->resourceClass::$model;
+
+        return $relatedModel::create(array_merge(
+            $this->relationCreateAttributes,
+            [$this->label => $value[$this->label]]
+        ));
     }
 
     public function jsonSerialize()
