@@ -20,7 +20,14 @@
               v-bind="multiSelectProps"
               v-model="value"
               v-on="{ tag: this.field.creatable ? addNew : null }"
-          />
+          >
+              <template slot="tag" slot-scope="{ option, remove }">
+                  <span class="multiselect__tag" :class="{ 'multiselect__tag-new': option.id === null }" :key="index">
+                    <span v-text="option[optionsLabel]"></span>
+                    <i tabindex="1" @keypress.enter.prevent="remove(option)" @mousedown.prevent="remove(option)" class="multiselect__tag-icon"></i>
+                </span>
+              </template>
+          </multi-select>
       </div>
     </template>
   </default-field>
@@ -264,6 +271,14 @@
     background-repeat: no-repeat;
     background-position: center center;
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 6"><path fill="%2335393C" fill-rule="nonzero" d="M8.293.293a1 1 0 0 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4A1 1 0 0 1 1.707.293L5 3.586 8.293.293z"/></svg>');
+  }
+
+  .multiselect__tag-new {
+      background-color: var(--primary);
+  }
+
+  .multiselect__tag-new > .multiselect__tag-icon:focus, .multiselect__tag-icon:hover {
+      background: var(--primary-dark);
   }
 
 </style>
