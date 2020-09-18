@@ -277,7 +277,8 @@
       background-color: var(--primary);
   }
 
-  .multiselect__tag-new > .multiselect__tag-icon:focus, .multiselect__tag-icon:hover {
+  .multiselect__tag-new > .multiselect__tag-icon:focus,
+  .multiselect__tag-new > .multiselect__tag-icon:hover {
       background: var(--primary-dark);
   }
 
