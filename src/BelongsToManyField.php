@@ -57,7 +57,7 @@ class BelongsToManyField extends Field
         $this->fillUsing(function ($request, $model, $attribute, $requestAttribute) use ($resource) {
             if (is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
                 $model::saved(function ($model) use ($attribute, $request) {
-                    $values = json_decode($request->$attribute, true);
+                    $values = json_decode($request->input($attribute), true);
 
                     $ids = $this->getRelatedIds($values);
 
@@ -69,7 +69,7 @@ class BelongsToManyField extends Field
                         $ids
                     );
                 });
-                unset($request->$attribute);
+                $request->except($attribute);
             }
         });
     }
