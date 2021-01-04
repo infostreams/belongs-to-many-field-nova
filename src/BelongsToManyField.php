@@ -30,7 +30,7 @@ class BelongsToManyField extends Field
 
     public $relationModel;
 
-    public $label = "name";
+    public $label = null;
 
     protected $creatable = true;
     protected $relationCreateAttributes = [];
@@ -50,6 +50,10 @@ class BelongsToManyField extends Field
         $resource = $resource ?? ResourceRelationshipGuesser::guessResource($name);
 
         $this->resource = $resource;
+
+        if ($this->label === null) {
+            $this->optionsLabel(($resource)::$title ?? 'name');
+        }
 
         $this->resourceClass = $resource;
         $this->resourceName = $resource::uriKey();
